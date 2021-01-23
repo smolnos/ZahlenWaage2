@@ -4,7 +4,6 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,8 +31,12 @@ public class MyCircle {
 
     float devicePixelsWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
     float devicePixelsHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+    private PlaySound playSound;
+
 
     MyCircle() {
+        playSound = new PlaySound();
+        playSound.genTone();
         if (devicePixelsWidth < devicePixelsHeight) {
             scale = devicePixelsWidth / 20;
         } else {

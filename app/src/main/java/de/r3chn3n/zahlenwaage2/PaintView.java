@@ -283,12 +283,27 @@ public class PaintView extends View {
             if (isInScale(myScales.getMyScale1(), myCircle)) {
                 computeSum(myCircle, myScales.getMyScale1());
                 myCircle.setMyScale(scale1);
+                myCircle.getPlaySound().stopSound();
             } else if (isInScale(myScales.getMyScale2(), myCircle)){
                 computeSum(myCircle, myScales.getMyScale2());
                 myCircle.setMyScale(scale2);
+                myCircle.getPlaySound().stopSound();
             } else {
                 myCircle.setY(myCircle.getY() + 1);
                 myCircle.setMyScale("");
+                if (myCircle.getPlaySound().isRunning()) {
+                    if (myCircle.getX() <= 0 || myCircle.getX()  >= getWidth()
+                            || myCircle.getY()  >= getHeight() || touchedEvent) {
+                        myCircle.getPlaySound().stopSound();
+                    }
+                } else {
+                    if (!myCircle.getPlaySound().isRunning() && !(myCircle.getX() <= 0 || myCircle.getX()  >= getWidth()
+                            || myCircle.getY()  >= getHeight() || touchedEvent)) {
+                        myCircle.getPlaySound().playSound();
+                    } else {
+                        myCircle.getPlaySound().stopSound();
+                    }
+                }
             }
         }
 
