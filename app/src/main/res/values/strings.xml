@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Zahlenwaage</string>
+    <string name="_169_molnos_totz_2020">&#169; Molnos &amp; Totz 2020</string>
+    <string name="delete_all_circles">Delete all circles</string>
+</resources>
