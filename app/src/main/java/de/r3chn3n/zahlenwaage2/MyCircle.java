@@ -31,12 +31,11 @@ public class MyCircle {
 
     float devicePixelsWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
     float devicePixelsHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
-    private PlaySound playSound;
+    boolean running = false;
 
 
     MyCircle() {
-        playSound = new PlaySound();
-        playSound.genTone();
+
         if (devicePixelsWidth < devicePixelsHeight) {
             scale = devicePixelsWidth / 20;
         } else {

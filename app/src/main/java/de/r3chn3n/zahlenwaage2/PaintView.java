@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.RectF;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -11,12 +12,16 @@ import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
+
+import static java.lang.Thread.sleep;
 
 
 @Getter
@@ -62,9 +67,17 @@ public class PaintView extends View {
     String scale1 = "scale1";
     String scale2 = "scale2";
 
-    public PaintView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    MediaPlayer mediaPlayer;
+    MediaPlayer mediaPlayerJailCellDoor;
+    private PlaySound playSound;
+    private int numFalling = 0;
 
+    public PaintView(Context context, AttributeSet attrs) throws IOException {
+        super(context, attrs);
+        mediaPlayer = MediaPlayer.create(context, R.raw.fireball);
+        mediaPlayerJailCellDoor = MediaPlayer.create(context, R.raw.jail_cell_door);
+        playSound = new PlaySound();
+        playSound.genTone();
         myScale1.setStartY(startY);
         myScale1.setEndY(endYNormal);
         myScale1.setStartX(DIFFX * 3);
@@ -268,6 +281,7 @@ public class PaintView extends View {
      * @param canvas canvas on which the rectangle and points are drawn
      */
 
+    @SneakyThrows
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void draw(Canvas canvas) {
         super.draw(canvas);
@@ -283,26 +297,34 @@ public class PaintView extends View {
             if (isInScale(myScales.getMyScale1(), myCircle)) {
                 computeSum(myCircle, myScales.getMyScale1());
                 myCircle.setMyScale(scale1);
-                myCircle.getPlaySound().stopSound();
+                setPlaySound(myCircle);
             } else if (isInScale(myScales.getMyScale2(), myCircle)){
                 computeSum(myCircle, myScales.getMyScale2());
                 myCircle.setMyScale(scale2);
-                myCircle.getPlaySound().stopSound();
+                setPlaySound(myCircle);
             } else {
                 myCircle.setY(myCircle.getY() + 1);
                 myCircle.setMyScale("");
-                if (myCircle.getPlaySound().isRunning()) {
+                if (myCircle.isRunning()) {
                     if (myCircle.getX() <= 0 || myCircle.getX()  >= getWidth()
                             || myCircle.getY()  >= getHeight() || touchedEvent) {
-                        myCircle.getPlaySound().stopSound();
+                        setPlaySound(myCircle);
                     }
                 } else {
-                    if (!myCircle.getPlaySound().isRunning() && !(myCircle.getX() <= 0 || myCircle.getX()  >= getWidth()
+                    if (!myCircle.isRunning() && !(myCircle.getX() <= 0 || myCircle.getX()  >= getWidth()
                             || myCircle.getY()  >= getHeight() || touchedEvent)) {
-                        myCircle.getPlaySound().playSound();
+                        if (getPlaySound().isRunning()) {
+                            getPlaySound().stopSound();
+                        }
+                        getPlaySound().playSound();
+                        myCircle.setRunning(true);
+                        numFalling++;
                     } else {
-                        myCircle.getPlaySound().stopSound();
+                        setPlaySound(myCircle);
                     }
+                }
+                if (myCircle.getY() >= getHeight()) {
+                    mediaPlayer.start();
                 }
             }
         }
@@ -312,10 +334,25 @@ public class PaintView extends View {
         drawScale(canvas, myScales.getMyScale1());
         drawScale(canvas, myScales.getMyScale2());
         myScales.getMyScale2().setContainsX(false);
+        ArrayList<Integer> toRemove = new ArrayList<>();
         for (int i = 0; i < myCircles.size(); i++) {
             drawText(canvas, myCircles.get(i));
+            if (myCircles.get(i).getY() >= getHeight()) {
+                toRemove.add(i);
+            }
         }
+
         invalidate();
+        removeIndices(myCircles, toRemove);
+    }
+
+    private void setPlaySound(MyCircle myCircle) {
+        if (myCircle.isRunning()) {
+            numFalling--;
+            if (myCircle.getMyScale().startsWith("scale")) mediaPlayerJailCellDoor.start();
+        }
+        myCircle.setRunning(false);
+        if (numFalling == 0) getPlaySound().stopSound();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -426,9 +463,11 @@ public class PaintView extends View {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void removeIndices(List<MyCircle> other, List<Integer> indices)
     {
+
         indices.stream()
                 .sorted(Comparator.reverseOrder())
                 .forEach(i->other.remove(i.intValue()));
+        if (indexMyCircles >= myCircles.size()) indexMyCircles = 0;
     }
 
     public void deleteCircles() {

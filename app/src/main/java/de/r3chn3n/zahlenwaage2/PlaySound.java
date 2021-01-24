@@ -41,25 +41,30 @@ public class PlaySound {
             generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
 
         }
-
-
-    }
-
-    void playSound(){
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                 sampleRate, AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
                 AudioTrack.MODE_STATIC);
         audioTrack.write(generatedSnd, 0, generatedSnd.length);
+    }
+
+    void playSound(){
         audioTrack.play();
         running = true;
     }
 
     void stopSound() {
-        if (audioTrack != null) {
-            audioTrack.release();
-            audioTrack = null;
+//        if (audioTrack != null) {
+//            audioTrack.release();
+//            audioTrack = null;
+//        }
+        if (running = true) {
+            audioTrack.stop();
+            audioTrack.flush();
+            running = false;
         }
-        running = false;
+//        audioTrack.write(generatedSnd, 0, generatedSnd.length);
+//        audioTrack.setPlaybackHeadPosition(0);
     }
+
 }
